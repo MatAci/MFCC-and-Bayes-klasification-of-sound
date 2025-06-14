@@ -1,6 +1,8 @@
 import librosa
 import numpy as np
 import joblib
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 voiced_set = {
     'a','e','i','o','u', 'a:','e:','i:','o:','u:',
@@ -30,7 +32,6 @@ def read_lab(lab_path):
             segments.append((start_s, end_s, ph_label))
     return segments
 
-# 3) Ekstrakcija MFCC po segmentima
 def extract_features_and_labels_from_segments(wav_path, lab_path):
     y, sr = librosa.load(wav_path, sr=16000)
     segments = read_lab(lab_path)
@@ -92,18 +93,48 @@ def extract_features_and_labels_from_segments(wav_path, lab_path):
 
 
 # 1. Učitaj model
-clf = joblib.load('naive_bayes_model1.pkl')
+clf = joblib.load('naive_bayes_model.pkl')
 
 # 2. Učitaj značajke, labele i foneme
 mfcc_feats, frame_labels, phoneme_labels = extract_features_and_labels_from_segments(
-    r"C:\Users\Patrik\Desktop\Projekt ipsic\MFCC-and-Bayes-klasification-of-sound\VEPRAD database\wav\sm04010103201.wav",
-    r"C:\Users\Patrik\Desktop\Projekt ipsic\MFCC-and-Bayes-klasification-of-sound\VEPRAD database\wav\sm04010103201.lab"
+    r"MFCC-and-Bayes-klasification-of-sound\VEPRAD database\sm04010105109.wav",
+    r"MFCC-and-Bayes-klasification-of-sound\VEPRAD database\sm04010105109.lab"
 )
 
 # 3. Predikcija
 predicted_labels = clf.predict(mfcc_feats)
 
-# 4. Ispis usporedbe
+# 4. Ispis usporedbe prvih 30
 print("=== Predikcije po segmentima (0 = unvoiced, 1 = voiced) ===")
-for i in range(min(20, len(predicted_labels))):
+for i in range(min(30, len(predicted_labels))):
     print(f"{i+1:02d}. Fonem: {phoneme_labels[i]:8} | Predikcija: {predicted_labels[i]} | Stvarna: {frame_labels[i]}")
+
+# 5. Grafički prikaz „lente” prvih 30 stvarnih i predikcija
+max_segments = min(30, len(predicted_labels))
+data = np.vstack([frame_labels[:max_segments], predicted_labels[:max_segments]])
+cmap = ListedColormap(['orange', 'green'])  # 0→narančasta, 1→zelena
+
+fig, ax = plt.subplots(figsize=(15, 2))
+im = ax.imshow(
+    data,
+    aspect='auto',
+    cmap=cmap,
+    interpolation='nearest'
+)
+
+# crne linije (ili bijele, ovisno o pozadini) između stupaca
+for x in range(max_segments + 1):
+    ax.axvline(x - 0.5, color='white', linewidth=0.8)
+
+# linija koja razdvaja stvarne i predikcije
+ax.axhline(0.5, color='black', linewidth=1)
+
+ax.set_yticks([0, 1])
+ax.set_yticklabels(['Stvarna', 'Predikcija'])
+ax.set_xlabel('Segment index')
+ax.set_title('Prvih 30 segmenata – zelena = voiced (1), narančasta = unvoiced (0)')
+ax.set_xticks(np.arange(max_segments))
+ax.set_xticklabels(np.arange(1, max_segments+1), rotation=90, fontsize=5)
+ax.set_ylim(-0.5, 1.5)
+plt.tight_layout()
+plt.show()

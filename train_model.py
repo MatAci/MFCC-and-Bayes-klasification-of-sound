@@ -18,8 +18,8 @@ X_train, X_test, y_train, y_test = train_test_split(
 clf = GaussianNB()
 clf.fit(X_train, y_train)
 
-joblib.dump(clf, 'naive_bayes_model1.pkl')
-print("Model spremljen kao 'naive_bayes_model1.pkl'")
+joblib.dump(clf, 'naive_bayes_model.pkl')
+print("Model spremljen kao 'naive_bayes_model.pkl'")
 
 # 3) Predikcija na test skupu
 y_pred = clf.predict(X_test)
