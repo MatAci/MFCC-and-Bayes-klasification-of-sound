@@ -3,6 +3,7 @@ import numpy as np
 import joblib
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
+import librosa.display
 
 voiced_set = {
     'a','e','i','o','u', 'a:','e:','i:','o:','u:',
@@ -136,5 +137,31 @@ ax.set_title('Prvih 30 segmenata – zelena = voiced (1), narančasta = unvoiced
 ax.set_xticks(np.arange(max_segments))
 ax.set_xticklabels(np.arange(1, max_segments+1), rotation=90, fontsize=5)
 ax.set_ylim(-0.5, 1.5)
+plt.tight_layout()
+plt.show()
+
+# 6. Grafički prikaz MFCC značajki za prvi segment
+wav_path = r"MFCC-and-Bayes-klasification-of-sound\VEPRAD database\sm04010105146.wav"
+
+y_full, sr_full = librosa.load(wav_path, sr=16000)
+
+# Računanje MFCC (13 koeficijenata)
+mfcc_full = librosa.feature.mfcc(
+    y=y_full,
+    sr=sr_full,
+    n_mfcc=13,
+    hop_length=512,
+    htk=True
+)
+
+plt.figure(figsize=(10, 4))
+librosa.display.specshow(
+    mfcc_full,
+    sr=sr_full,
+    x_axis="time",
+    cmap="viridis"
+)
+plt.colorbar(format="%+2.0f dB")
+plt.title("MFCC spektrogram cijelog signala")
 plt.tight_layout()
 plt.show()
